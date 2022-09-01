@@ -149,6 +149,7 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
             //borderSize = 0;
         }
 
+        // if cover is rendering
         if (currentPage === 1) {
             console.time("cover")
             // create left part of cover
@@ -194,15 +195,15 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
             let leftImage = image.clone().crop({
                 x: isSecondPage ? 0 : borderSize,
                 y: isSecondPage ? 0 : borderSize,
-                width: viewPortWidth / 2,
-                height: browserHeight - (isSecondPage ? 0 : borderSize)
+                width: viewPortWidth / 2 - (isSecondPage ? 0 : borderSize * 2),
+                height: browserHeight - (isSecondPage ? 0 : borderSize * 2)
             })
 
             let rightImage = image.clone().crop({
                 x: viewPortWidth / 2,
                 y: isSecondLastPage ? 0 : borderSize,
                 width: viewPortWidth / 2 - (isSecondLastPage ? 0 : borderSize),
-                height: browserHeight - (isSecondLastPage ? 0 : borderSize)
+                height: browserHeight - (isSecondLastPage ? 0 : borderSize * 2)
             });
 
             await leftImage.save(`${destinationPath}/${number}.jpg`);
