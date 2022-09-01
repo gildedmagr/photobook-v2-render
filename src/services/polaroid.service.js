@@ -81,6 +81,8 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
     const destinationPath = `${domainsMap[domain]}/${relativePath}`;
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
+    }else{
+        fs.readdirSync(destinationPath).forEach(f => fs.rmSync(`${destinationPath}/${f}`));
     }
 
     const browser = await puppeteer.launch(

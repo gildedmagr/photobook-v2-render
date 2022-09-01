@@ -9,9 +9,14 @@ const createPreview = async (req, res, next) => {
         const domain = req.query.domain;
         const uid = req.query.uid;
         const pages = req.query.pages;
-        const userPreview = req.query.userPreview;
+        const isUserPreview = Boolean(req.query.userPreview);
         const width = req.query.width;
         const height = req.query.height;
+        console.log(isUserPreview);
+        if(isUserPreview){
+            renderService.createPreview(domain, uid, pages, width, height);
+            return res.json({'status': 'launched'});
+        }
         const result = await renderService.createPreview(domain, uid, pages, width, height);
         res.json(result);
     } catch (err) {
@@ -25,11 +30,11 @@ const renderBook = async (req, res, next) => {
         const domain = req.query.domain;
         const uid = req.query.uid;
         const pages = req.query.pages;
-        const userPreview = req.query.userPreview;
+        const isUserPreview = Boolean(req.query.userPreview);
         const width = req.query.width;
         const height = req.query.height;
-        console.log(userPreview);
-        if(userPreview === 'false' || !userPreview){
+        console.log(isUserPreview);
+        if(!isUserPreview){
             const result = await renderService.startRender(domain, uid, pages, width, height);
             res.json(result);
         }else{
