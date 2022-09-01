@@ -37,6 +37,13 @@ const renderBook = async (req, res, next) => {
         const pages = req.query.pages;
         const width = req.query.width;
         const height = req.query.height;
+        const redirectUrl = req.query.redirectUrl;
+        if(redirectUrl){
+            console.log(`Start rendering in background mode, uid: ${uid}, domain: ${domain}`);
+            renderService.startRender(domain, uid, pages, width, height).then(() => {});
+            return res.redirect(redirectUrl);
+        }
+        console.log(`Start rendering, uid: ${uid}, domain: ${domain}`);
         const result = await renderService.startRender(domain, uid, pages, width, height);
         res.json(result);
     } catch (err) {
