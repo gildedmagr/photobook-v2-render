@@ -8,8 +8,7 @@ const createSocketInstance = (http) => {
         console.log('a user connected, uid: ', uid);
         clients[uid] = socket;
         socket.on('disconnect', (socket) => {
-            console.log('disconnect', uid);
-            //delete clients[uid]
+            delete clients[uid];
         })
     });
     return socketIO;

@@ -4,9 +4,9 @@ const cors = require('cors');
 const app = express();
 const http = require('http').createServer(app);
 const route = require('./src/routes');
-const {createSocketInstance} = require('./src/services');
+const {socketService} = require('./src/services');
 
-const io = createSocketInstance(http);
+const io = socketService.createSocketInstance(http);
 
 const port = process.env.PORT || 3000;
 

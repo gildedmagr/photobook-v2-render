@@ -1,4 +1,4 @@
-const renderService = require('../services/polaroid.service');
+const {renderService} = require('../services');
 
 const healthStatus = (req, res, next) => {
     res.json({'healthy': true});
@@ -13,7 +13,7 @@ const createPreview = async (req, res, next) => {
         const width = req.query.width;
         const height = req.query.height;
 
-        if(isUserPreview){
+        if (isUserPreview) {
             renderService.createPreview(domain, uid, pages, width, height).then(r => {
                 console.log('Preview has been created');
             }).catch(e => {
