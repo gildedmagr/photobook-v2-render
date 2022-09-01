@@ -7,7 +7,7 @@ router.get('/photobook/render', controller.renderBook);
 router.get('/health/status', controller.healthStatus);
 
 router.get('/', function(req, res){
-    res.render("index");
+    res.render('public/index');
 });
 
 module.exports = router;

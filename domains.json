@@ -1,4 +1,4 @@
 {
-  "localhost": "./public",
-  "pechat.photo": "./public/pechat.photo"
+  "localhost": "./tmp",
+  "pechat.photo": "./tmp/pechat.photo"
 }
