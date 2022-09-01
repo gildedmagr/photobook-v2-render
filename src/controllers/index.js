@@ -41,7 +41,7 @@ const renderBook = async (req, res, next) => {
         if(redirectUrl){
             console.log(`Start rendering in background mode, uid: ${uid}, domain: ${domain}`);
             renderService.startRender(domain, uid, pages, width, height).then(() => {});
-            return res.redirect(redirectUrl);
+            return res.render('public/redirect', {redirectUrl});
         }
         console.log(`Start rendering, uid: ${uid}, domain: ${domain}`);
         const result = await renderService.startRender(domain, uid, pages, width, height);

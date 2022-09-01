@@ -5,6 +5,7 @@ const app = express();
 const http = require('http').createServer(app);
 const route = require('./src/routes');
 const {socketService} = require('./src/services');
+const path = require("path");
 
 const io = socketService.createSocketInstance(http);
 
@@ -23,10 +24,10 @@ app.use(
 );
 
 app.use(route);
+app.engine('html', require('ejs').renderFile);
+app.set('view engine', 'html');
+app.set('views', __dirname);
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/index.html');
-});
 
 http.listen(port, '0.0.0.0', () => {
     console.log(`Render is running at http://localhost:${port}`)
