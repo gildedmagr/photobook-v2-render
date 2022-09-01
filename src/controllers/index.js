@@ -9,7 +9,7 @@ const createPreview = async (req, res, next) => {
         const domain = req.query.domain;
         const uid = req.query.uid;
         const pages = req.query.pages;
-        const isUserPreview = Boolean(req.query.userPreview);
+        const isUserPreview = (req.query.userPreview || '').toLowerCase() === 'true';
         const width = req.query.width;
         const height = req.query.height;
         console.log(isUserPreview);
@@ -30,7 +30,7 @@ const renderBook = async (req, res, next) => {
         const domain = req.query.domain;
         const uid = req.query.uid;
         const pages = req.query.pages;
-        const isUserPreview = Boolean(req.query.userPreview);
+        const isUserPreview = (req.query.userPreview || '').toLowerCase() === 'true';
         const width = req.query.width;
         const height = req.query.height;
         console.log(isUserPreview);
