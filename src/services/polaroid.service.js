@@ -73,7 +73,17 @@ const startRender = async (domain, uid, totalPages, width, height) => {
     return {'status': 'completed', 'pages': totalPages, 'images': links, 'time': `${(end - start) / 1000}`};
 }
 
-const createPreview = async (domain, uid, totalPages, width, height) => {
+/**
+ * Generate page renders for 3D preview
+ *
+ * @param domain
+ * @param uid
+ * @param totalPages
+ * @param width
+ * @param height
+ * @returns {Promise<{data: *[]}>}
+ */
+const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
     const multiplier = 1;
     const browserWidth = width * multiplier;
     const browserHeight = height * multiplier;
@@ -133,15 +143,13 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
             width: viewPortWidth,
             height: browserHeight
         });
-        console.time('screenshot')
+
         const b64string = await page.screenshot({
             path: destFile,
-           // encoding: "base64",
+            // encoding: "base64",
             type: 'jpeg',
             quality: 100
         });
-
-        //const buffer = Buffer.from(b64string, "base64");
         console.log('Snapshot has been created');
         let image = await Image.load(destFile);
         console.timeEnd('screenshot')
@@ -235,6 +243,82 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
     return {data: resultLinks}
 }
 
+/**
+ * Generate 2-page preview for customer's book
+ *
+ * @param domain
+ * @param uid
+ * @param totalPages
+ * @param width
+ * @param height
+ * @returns {Promise<void>}
+ */
+const createPreview = async (domain, uid, totalPages, width, height) => {
+    const multiplier = 1;
+    const browserWidth = width * multiplier;
+    const browserHeight = height * multiplier;
+    const relativePath = `image/photobook/snapshots/${uid}/preview`;
+    const destinationPath = `${domainsMap[domain]}/${relativePath}`;
+    if (!fs.existsSync(destinationPath)) {
+        fs.mkdirSync(destinationPath, {recursive: true});
+    }
+
+    const browser = await puppeteer.launch(
+        {
+            executablePath: isProd ? '/usr/bin/google-chrome' : '',
+            headless: true,
+            ignoreHTTPSErrors: true,
+            args: [...minimal_args, `--window-size=${browserWidth},${browserHeight}`],
+            dumpio: false,
+            userDataDir: '/tmp',
+            defaultViewport: {
+                width: browserWidth,
+                height: browserHeight
+            }
+        }
+    );
+
+    const page = await browser.newPage();
+    let viewPortWidth = browserWidth;
+    page.on('console', msg => {
+        const message = msg.text();
+
+        if (message.startsWith('width:')) {
+            viewPortWidth = parseInt(msg.text().replace('width:', ''));
+            console.log(viewPortWidth);
+        }
+    });
+
+    const resultLinks = [];
+    for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
+
+        const url = placeholdify(renderPage, domain, uid, currentPage - 1, browserWidth, browserHeight);
+        console.log(`Going to create snapshot from: ${url}`);
+
+        const destFile = `${destinationPath}/full-${currentPage}.jpg`;
+        //await page.waitForNavigation({waitUntil: 'networkidle2'})
+        await page.goto(url, {
+            timeout: 60000,
+            waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
+        });
+        console.log('page loaded')
+        await page.setViewport({
+            width: viewPortWidth,
+            height: browserHeight
+        });
+        await page.screenshot({
+            path: destFile,
+            type: 'jpeg',
+            quality: 100
+        });
+
+        console.log('Snapshot has been created');
+
+    }
+    await page.close();
+    await browser.close();
+}
+
 const bendFirstPageValve = async (destinationPath) => {
     let firstPage = await Image.load(`${destinationPath}/2.jpg`);
     let cover = (await Image.load(`${destinationPath}/cover-right.jpg`)).resize({
@@ -290,5 +374,6 @@ const bendSecondLastPageValve = async (pagesNumber, destinationPath) => {
 
 module.exports = {
     startRender,
+    create3DPreviewPages,
     createPreview
 }

@@ -12,12 +12,17 @@ const createPreview = async (req, res, next) => {
         const isUserPreview = (req.query.userPreview || '').toLowerCase() === 'true';
         const width = req.query.width;
         const height = req.query.height;
-        console.log(isUserPreview);
+
         if(isUserPreview){
-            //renderService.createPreview(domain, uid, pages, width, height);
+            renderService.createPreview(domain, uid, pages, width, height).then(r => {
+                console.log('Preview has been created');
+            }).catch(e => {
+                console.log(e);
+            });
             return res.json({'status': 'launched'});
         }
-        const result = await renderService.createPreview(domain, uid, pages, width, height);
+
+        const result = await renderService.create3DPreviewPages(domain, uid, pages, width, height);
         res.json(result);
     } catch (err) {
         console.error(`Error while getting programming languages`, err.message);
@@ -30,16 +35,10 @@ const renderBook = async (req, res, next) => {
         const domain = req.query.domain;
         const uid = req.query.uid;
         const pages = req.query.pages;
-        const isUserPreview = (req.query.userPreview || '').toLowerCase() === 'true';
         const width = req.query.width;
         const height = req.query.height;
-        console.log(isUserPreview);
-        if(!isUserPreview){
-            const result = await renderService.startRender(domain, uid, pages, width, height);
-            res.json(result);
-        }else{
-            res.json([]);
-        }
+        const result = await renderService.startRender(domain, uid, pages, width, height);
+        res.json(result);
     } catch (err) {
         console.error(`Error while getting programming languages`, err.message);
         next(err);
