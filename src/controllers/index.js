@@ -14,7 +14,7 @@ const createPreview = async (req, res, next) => {
         const height = req.query.height;
         console.log(isUserPreview);
         if(isUserPreview){
-            renderService.createPreview(domain, uid, pages, width, height);
+            //renderService.createPreview(domain, uid, pages, width, height);
             return res.json({'status': 'launched'});
         }
         const result = await renderService.createPreview(domain, uid, pages, width, height);
