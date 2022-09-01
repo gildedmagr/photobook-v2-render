@@ -195,7 +195,7 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
             let leftImage = image.clone().crop({
                 x: isSecondPage ? 0 : borderSize,
                 y: isSecondPage ? 0 : borderSize,
-                width: viewPortWidth / 2 - (isSecondPage ? 0 : borderSize * 2),
+                width: viewPortWidth / 2 - (isSecondPage ? 0 : borderSize ),
                 height: browserHeight - (isSecondPage ? 0 : borderSize * 2)
             })
 
