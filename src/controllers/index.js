@@ -38,13 +38,15 @@ const renderBook = async (req, res, next) => {
         const width = req.query.width;
         const height = req.query.height;
         const redirectUrl = req.query.redirectUrl;
+        const withBorder = (req.query.withBorder || '').toLowerCase() === 'true';
+        console.log(withBorder);
         if(redirectUrl){
             console.log(`Start rendering in background mode, uid: ${uid}, domain: ${domain}`);
-            renderService.startRender(domain, uid, pages, width, height).then(() => {});
+            renderService.startRender(domain, uid, pages, width, height, withBorder).then(() => {});
             return res.render('public/redirect', {redirectUrl});
         }
         console.log(`Start rendering, uid: ${uid}, domain: ${domain}`);
-        const result = await renderService.startRender(domain, uid, pages, width, height);
+        const result = await renderService.startRender(domain, uid, pages, width, height, withBorder);
         res.json(result);
     } catch (err) {
         console.error(`Error while getting programming languages`, err.message);

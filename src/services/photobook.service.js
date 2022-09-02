@@ -10,7 +10,18 @@ const domains = fs.readFileSync(process.env.DOMAINS_DICT_PATH || 'domains.json')
 const domainsMap = JSON.parse(domains);
 const isProd = process.env.NODE_ENV === 'production';
 
-const startRender = async (domain, uid, totalPages, width, height) => {
+/**
+ * Render full pages
+ *
+ * @param domain
+ * @param uid
+ * @param totalPages
+ * @param width
+ * @param height
+ * @param withBorder
+ * @returns {Promise<{images: *[], pages, time: string, status: string}>}
+ */
+const startRender = async (domain, uid, totalPages, width, height, withBorder) => {
     const start = Date.now();
     const relativePath = `image/photobook/renders/${uid}`;
     const destinationPath = `${domainsMap[domain]}/${relativePath}`;
@@ -18,8 +29,11 @@ const startRender = async (domain, uid, totalPages, width, height) => {
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
     }
-    const browserWidth = parseInt(width);
-    const browserHeight = parseInt(height);
+    const additionalBorderWidth = 100;
+    const bookWidth = parseInt(width);
+    const bookHeight = parseInt(height);
+    const browserWidth = bookWidth + (withBorder ? additionalBorderWidth * 2 : 0);
+    const browserHeight = bookHeight + (withBorder ? additionalBorderWidth : 0);
     console.log(browserWidth, browserHeight);
     const browser = await puppeteer.launch(
         {
@@ -49,7 +63,7 @@ const startRender = async (domain, uid, totalPages, width, height) => {
 
     for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
 
-        const url = placeholdify(renderPage, domain, uid, currentPage - 1, browserWidth, browserHeight, true);
+        const url = placeholdify(renderPage, domain, uid, currentPage - 1, bookWidth, bookHeight, true);
         console.log(`Going to create snapshot from: ${url}`);
 
 
@@ -294,7 +308,7 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
         const url = placeholdify(renderPage, domain, uid, currentPage - 1, browserWidth, browserHeight, false);
         console.log(`Going to create snapshot from: ${url}`);
 
-        const destFile = `${destinationPath}/full-${currentPage}.jpg`;
+        const destFile = `${destinationPath}/${currentPage}.jpg`;
         //await page.waitForNavigation({waitUntil: 'networkidle2'})
         await page.goto(url, {
             timeout: 60000,
