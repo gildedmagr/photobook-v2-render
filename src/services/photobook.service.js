@@ -104,14 +104,14 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
     const destinationPath = `${domainsMap[domain]}/${relativePath}`;
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
-    } else {
+    }/* else {
         fs.readdirSync(destinationPath).forEach(f => {
             const lstat = fs.lstatSync(`${destinationPath}/${f}`);
             if (lstat.isFile()) {
                 fs.rmSync(`${destinationPath}/${f}`);
             }
         });
-    }
+    }*/
 
     const browser = await puppeteer.launch(
         {
