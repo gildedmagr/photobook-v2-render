@@ -120,6 +120,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
             }
         });
     }
+    return ['ok'];
 
     const browser = await puppeteer.launch(
         {
