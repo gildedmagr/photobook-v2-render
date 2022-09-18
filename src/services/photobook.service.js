@@ -9,6 +9,7 @@ const renderPage = 'https://{0}/index.php?route=photobook/photobook/renderPage&u
 const domains = fs.readFileSync(process.env.DOMAINS_DICT_PATH || 'domains.json');
 const domainsMap = JSON.parse(domains);
 const isProd = process.env.NODE_ENV === 'production';
+const BROWSER_TIMEOUT = 5 * 60 * 1000;
 
 /**
  * Render full pages
@@ -147,7 +148,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
         const destFile = `${destinationPath}/full-${currentPage}.jpg`;
         //await page.waitForNavigation({waitUntil: 'networkidle2'})
         await page.goto(url, {
-            timeout: 60000,
+            timeout: BROWSER_TIMEOUT,
             waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
         });
         console.log('page loaded')
@@ -335,7 +336,7 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
         const destFile = `${destinationPath}/${currentPage}.jpg`;
         //await page.waitForNavigation({waitUntil: 'networkidle2'})
         await page.goto(url, {
-            timeout: 60000,
+            timeout: BROWSER_TIMEOUT,
             waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
         });
         console.log('page loaded')
