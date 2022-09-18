@@ -192,12 +192,14 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
     await bendSecondLastPageValve(totalPages, destinationPath);
     console.log('Border created');
     console.timeEnd("bend")
+    deleteTmpFiles(destinationPath, totalPages);
     return {data: resultLinks}
 }
 
 
+
 // slice and save cover pages
-async function createCoverPages(image, width, height, destinationPath, borderSize, totalPages, coverExtraWidth) {
+const createCoverPages = async (image, width, height, destinationPath, borderSize, totalPages, coverExtraWidth) => {
     // create left part of cover
     let coverLeft = image.clone().crop({
         x: 0,
@@ -251,7 +253,7 @@ async function createCoverPages(image, width, height, destinationPath, borderSiz
 }
 
 // slice and save regular pages
-async function createPages(number, totalPages, image, borderSize, viewPortWidth, browserHeight, destinationPath) {
+const createPages = async (number, totalPages, image, borderSize, viewPortWidth, browserHeight, destinationPath) => {
     const isSecondPage = number === 2;
     const isSecondLastPage = number + 1 === totalPages * 2 - 1;
     let leftImage = image.clone().crop({
@@ -270,6 +272,14 @@ async function createPages(number, totalPages, image, borderSize, viewPortWidth,
 
     await leftImage.save(`${destinationPath}/${number}.jpg`);
     await rightImage.save(`${destinationPath}/${number + 1}.jpg`);
+}
+
+const deleteTmpFiles = (destinationPath, totalPages) => {
+    fs.rmSync(`${destinationPath}/cover-left.jpg`);
+    fs.rmSync(`${destinationPath}/cover-right.jpg`);
+    for(let i = 1; i <= totalPages; i++){
+        fs.rmSync(`${destinationPath}/full-${i}.jpg`);
+    }
 }
 
 /**
