@@ -53,10 +53,11 @@ const startRender = async (domain, uid, totalPages, width, height, withBorder) =
     let copies = 1;
 
     const page = await browser.newPage();
+    let coverExtraWidth = 0;
     page.on('console', msg => {
         const message = msg.text();
-        if (message.startsWith('copies:')) {
-            copies = parseInt(msg.text().replace('copies:', ''));
+        if (message.startsWith('COVER_EXTRA:')) {
+            coverExtraWidth = parseInt(msg.text().replace('COVER_EXTRA:', '') || 0);
         }
     });
 
@@ -69,6 +70,12 @@ const startRender = async (domain, uid, totalPages, width, height, withBorder) =
 
         const destFile = `${destinationPath}/${currentPage}.jpg`;
         await page.goto(url);
+
+        await page.setViewport({
+            width: browserWidth + coverExtraWidth,
+            height: browserHeight
+        });
+
         await page.screenshot({
             path: destFile,
             type: 'jpeg',
@@ -104,14 +111,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
     const destinationPath = `${domainsMap[domain]}/${relativePath}`;
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
-    }/* else {
-        fs.readdirSync(destinationPath).forEach(f => {
-            const lstat = fs.lstatSync(`${destinationPath}/${f}`);
-            if (lstat.isFile()) {
-                fs.rmSync(`${destinationPath}/${f}`);
-            }
-        });
-    }*/
+    }
 
     const browser = await puppeteer.launch(
         {
@@ -130,12 +130,11 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
 
     const page = await browser.newPage();
     let viewPortWidth = browserWidth;
+    let coverExtraWidth = 0;
     page.on('console', msg => {
         const message = msg.text();
-
-        if (message.startsWith('width:')) {
-            viewPortWidth = parseInt(msg.text().replace('width:', ''));
-            console.log(viewPortWidth);
+        if (message.startsWith('COVER_EXTRA:')) {
+            coverExtraWidth = parseInt(msg.text().replace('COVER_EXTRA:', '') || 0);
         }
     });
 
@@ -153,7 +152,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
         });
         console.log('page loaded')
         await page.setViewport({
-            width: viewPortWidth,
+            width: viewPortWidth + coverExtraWidth,
             height: browserHeight
         });
 
@@ -165,84 +164,24 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
         });
         console.log('Snapshot has been created');
         let image = await Image.load(destFile);
-        console.timeEnd('screenshot')
         //let image = await Image.fromCanvas(imageData);
-        let borderSize = currentPage === 1 ? Math.round(viewPortWidth / 100 * 3) : Math.round(image.height - image.height / 1.02040);
-        //console.log(borderSize);
+        let borderSize = currentPage === 1 ? Math.round((viewPortWidth + coverExtraWidth) / 100 * 3) : Math.round(image.height - image.height / 1.02040);
         let number = currentPage - 2 + currentPage;
-        // crop image only if it's not second page
-        // crop image if it's not second last page
-
-        if (currentPage === 2 || number + 1 === totalPages * 2 - 1) {
-            //borderSize = 0;
-        }
 
         // if cover is rendering
         if (currentPage === 1) {
-            console.time("cover")
-            // create left part of cover
-            let coverLeft = image.clone().crop({
-                x: 0,
-                y: 0,
-                width: viewPortWidth / 2,
-                height: browserHeight
-            })
-
-
-            // create right part of cover
-            let coverRight = image.clone().crop({
-                x: viewPortWidth / 2,
-                y: 0,
-                width: viewPortWidth / 2,
-                height: browserHeight
-            });
-
-            await coverRight.save(`${destinationPath}/cover-right.jpg`);
-            await coverLeft.save(`${destinationPath}/cover-left.jpg`);
-
-            coverLeft = coverLeft.crop({
-                x: borderSize,
-                y: borderSize,
-                width: viewPortWidth / 2 - borderSize,
-                height: browserHeight - borderSize * 2
-            });
-
-            coverRight = coverRight.crop({
-                x: 0,
-                y: borderSize,
-                width: viewPortWidth / 2 - borderSize,
-                height: browserHeight - borderSize * 2
-            });
-
-            await coverRight.save(`${destinationPath}/1.jpg`);
-            await coverLeft.save(`${destinationPath}/${totalPages * 2}.jpg`);
-            console.timeEnd('cover')
+            await createCoverPages(image, viewPortWidth, browserHeight, destinationPath, borderSize, totalPages, coverExtraWidth);
         } else {
-            const isSecondPage = number === 2;
-            const isSecondLastPage = number + 1 === totalPages * 2 - 1;
-            let leftImage = image.clone().crop({
-                x: isSecondPage ? 0 : borderSize,
-                y: isSecondPage ? 0 : borderSize,
-                width: viewPortWidth / 2 - (isSecondPage ? 0 : borderSize),
-                height: browserHeight - (isSecondPage ? 0 : borderSize * 2)
-            })
-
-            let rightImage = image.clone().crop({
-                x: viewPortWidth / 2,
-                y: isSecondLastPage ? 0 : borderSize,
-                width: viewPortWidth / 2 - (isSecondLastPage ? 0 : borderSize),
-                height: browserHeight - (isSecondLastPage ? 0 : borderSize * 2)
-            });
-
-            await leftImage.save(`${destinationPath}/${number}.jpg`);
-            await rightImage.save(`${destinationPath}/${number + 1}.jpg`);
+            await createPages(number, totalPages, image, borderSize, viewPortWidth, browserHeight, destinationPath);
         }
 
-        //fs.rmSync(destFile);
-        viewPortWidth = browserWidth;
+
         resultLinks.push(`/${relativePath}/${number + 1}.jpg`);
         resultLinks.push(`/${relativePath}/${number + 2}.jpg`);
-        socketService.emit(uid, 'progress', Math.round(100 / totalPages * currentPage));
+        // calculate progress
+        const progress =  Math.round(100 / totalPages * currentPage);
+        // send progress to connected socket
+        socketService.emit(uid, 'progress', progress);
     }
     await page.close();
 
@@ -254,6 +193,83 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
     console.log('Border created');
     console.timeEnd("bend")
     return {data: resultLinks}
+}
+
+
+// slice and save cover pages
+async function createCoverPages(image, width, height, destinationPath, borderSize, totalPages, coverExtraWidth) {
+    // create left part of cover
+    let coverLeft = image.clone().crop({
+        x: 0,
+        y: 0,
+        width: width / 2,
+        height: height
+    })
+
+
+    // create right part of cover
+    let coverRight = image.clone();
+    // if there is no extra cover width crop it as regular
+    if(!coverExtraWidth){
+        coverRight = coverRight.crop({
+            x: width / 2,
+            y: 0,
+            width: width / 2,
+            height: height
+        });
+    }
+    // if there is extra width - crop it eliminating central part of cover
+    if(coverExtraWidth){
+        coverRight = coverRight.crop({
+            x: (coverExtraWidth + width) - Math.round(width / 2),
+            y: 0,
+            width: width / 2,
+            height: height
+        });
+    }
+
+    await coverRight.save(`${destinationPath}/cover-right.jpg`);
+    await coverLeft.save(`${destinationPath}/cover-left.jpg`);
+
+    // remove borders(part of the cover which will be bent inside)
+    coverLeft = coverLeft.crop({
+        x: borderSize,
+        y: borderSize,
+        width: width / 2 - borderSize,
+        height: height - borderSize * 2
+    });
+    // remove borders(part of the cover which will be bent inside)
+    coverRight = coverRight.crop({
+        x: 0,
+        y: borderSize,
+        width: width / 2 - borderSize,
+        height: height - borderSize * 2
+    });
+
+    await coverRight.save(`${destinationPath}/1.jpg`);
+    await coverLeft.save(`${destinationPath}/${totalPages * 2}.jpg`);
+}
+
+// slice and save regular pages
+async function createPages(number, totalPages, image, borderSize, viewPortWidth, browserHeight, destinationPath) {
+    const isSecondPage = number === 2;
+    const isSecondLastPage = number + 1 === totalPages * 2 - 1;
+    let leftImage = image.clone().crop({
+        x: isSecondPage ? 0 : borderSize,
+        y: isSecondPage ? 0 : borderSize,
+        width: viewPortWidth / 2 - (isSecondPage ? 0 : borderSize),
+        height: browserHeight - (isSecondPage ? 0 : borderSize * 2)
+    })
+
+    let rightImage = image.clone().crop({
+        x: viewPortWidth / 2,
+        y: isSecondLastPage ? 0 : borderSize,
+        width: viewPortWidth / 2 - (isSecondLastPage ? 0 : borderSize),
+        height: browserHeight - (isSecondLastPage ? 0 : borderSize * 2)
+    });
+
+    await leftImage.save(`${destinationPath}/${number}.jpg`);
+    await rightImage.save(`${destinationPath}/${number + 1}.jpg`);
 }
 
 /**
@@ -293,16 +309,14 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
 
     const page = await browser.newPage();
     let viewPortWidth = browserWidth;
+    let coverExtraWidth = 0;
     page.on('console', msg => {
         const message = msg.text();
-
-        if (message.startsWith('width:')) {
-            viewPortWidth = parseInt(msg.text().replace('width:', ''));
-            console.log(viewPortWidth);
+        if (message.startsWith('COVER_EXTRA:')) {
+            coverExtraWidth = parseInt(msg.text().replace('COVER_EXTRA:', '') || 0);
         }
     });
 
-    const resultLinks = [];
     for (let currentPage = 1; currentPage <= totalPages; currentPage++) {
 
         const url = placeholdify(renderPage, domain, uid, currentPage - 1, browserWidth, browserHeight, false);
@@ -316,7 +330,7 @@ const createPreview = async (domain, uid, totalPages, width, height) => {
         });
         console.log('page loaded')
         await page.setViewport({
-            width: viewPortWidth,
+            width: viewPortWidth + coverExtraWidth,
             height: browserHeight
         });
         await page.screenshot({
