@@ -10,6 +10,7 @@ const domains = fs.readFileSync(process.env.DOMAINS_DICT_PATH || 'domains.json')
 const domainsMap = JSON.parse(domains);
 const isProd = process.env.NODE_ENV === 'production';
 const BROWSER_TIMEOUT = 5 * 60 * 1000;
+const puppeteerCacheDir = '/tmp/puppeteer/cache';
 
 /**
  * Render full pages
@@ -43,7 +44,7 @@ const startRender = async (domain, uid, totalPages, width, height, withBorder) =
             ignoreHTTPSErrors: true,
             args: [...minimal_args, `--window-size=${browserWidth},${browserHeight}`],
             dumpio: false,
-            userDataDir: '/tmp',
+            userDataDir: puppeteerCacheDir,
             defaultViewport: {
                 width: browserWidth,
                 height: browserHeight
@@ -129,7 +130,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
             ignoreHTTPSErrors: true,
             args: [...minimal_args, `--window-size=${browserWidth},${browserHeight}`],
             dumpio: false,
-            userDataDir: '/tmp',
+            userDataDir: puppeteerCacheDir,
             defaultViewport: {
                 width: browserWidth,
                 height: browserHeight
