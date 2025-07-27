@@ -22,6 +22,7 @@ const createSocketInstance = (http) => {
         const uid = socket.handshake.query['uid'];
         console.log('a user connected, uid: ', uid);
         clients[uid] = socket;
+        socket.join(uid);
         socket.on('disconnect', (socket) => {
             delete clients[uid];
         })
@@ -38,10 +39,10 @@ const getClient = (uid) => {
 }
 
 const emit = (uid, event, data) => {
-    if (clients[uid]) {
-        clients[uid].emit(event, data);
+    if (socketIO) {
+        socketIO.to(uid).emit(event, data);
     } else {
-        console.log('No client with uid ', uid);
+        console.log('No socketIO');
     }
 }
 
