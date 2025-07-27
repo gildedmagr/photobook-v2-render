@@ -1,61 +1,53 @@
-const {Server} = require("socket.io");
-const {createAdapter} = require('@socket.io/redis-adapter');
+const { Server } = require("socket.io");
+const { createAdapter } = require("@socket.io/redis-adapter");
 const Redis = require("ioredis");
 
-
 let socketIO;
-const clients = {};
+
 const createSocketInstance = (http) => {
-    const pubClient = new Redis(process.env.REDIS_URL);
+    const pubClient = new Redis(process.env.REDIS_URL || 'redis://redis:6379');
     const subClient = pubClient.duplicate();
 
-    pubClient.on("error", (err) => {
-        console.log(err.message);
+    pubClient.on("error", (err) => console.error("Redis pub error:", err.message));
+    subClient.on("error", (err) => console.error("Redis sub error:", err.message));
+
+    socketIO = new Server(http, {
+        cors: {
+            origin: "*",
+            methods: ["GET", "POST"]
+        }
     });
 
-    subClient.on("error", (err) => {
-        console.log(err.message);
-    });
+    // Set adapter AFTER socketIO is initialized
+    socketIO.adapter(createAdapter(pubClient, subClient));
 
-    socketIO = new Server(http,
-        {
-            cors: {
-                origin: "*",
-                methods: ["GET", "POST"]
-            },
-            adapter: createAdapter(pubClient, subClient)
-        });
-    socketIO.on('connection', (socket) => {
+    socketIO.on("connection", (socket) => {
         const uid = socket.handshake.query['uid'];
-        console.log('a user connected, uid: ', uid);
-        clients[uid] = socket;
+        if (!uid) {
+            console.warn("Client connected without UID");
+            return;
+        }
+
+        console.log("Client connected:", uid);
         socket.join(uid);
-        socket.on('disconnect', (socket) => {
-            delete clients[uid];
-        })
+
+        socket.on("disconnect", () => {
+            console.log("Client disconnected:", uid);
+        });
     });
-    return socketIO;
-}
 
-const getSocket = () => {
     return socketIO;
-}
-
-const getClient = (uid) => {
-    return clients[uid];
-}
+};
 
 const emit = (uid, event, data) => {
-    if (socketIO) {
-        socketIO.to(uid).emit(event, data);
-    } else {
-        console.log('No socketIO');
+    if (!socketIO) {
+        console.log("No socketIO initialized");
+        return;
     }
-}
+    socketIO.to(uid).emit(event, data);
+};
 
 module.exports = {
     createSocketInstance,
-    getSocket,
-    getClient,
     emit
-}
+};
