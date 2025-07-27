@@ -6,7 +6,7 @@ const Redis = require("ioredis");
 let socketIO;
 const clients = {};
 const createSocketInstance = (http) => {
-    const pubClient = new Redis();
+    const pubClient = new Redis('redis://redis:6379');
     const subClient = pubClient.duplicate();
 
     pubClient.on("error", (err) => {
