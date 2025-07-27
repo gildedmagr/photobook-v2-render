@@ -172,7 +172,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
             type: 'jpeg',
             quality: 100
         });
-        console.log('Snapshot has been created');
+        console.log(`Snapshot has been created on path: ${destFile}`);
         let image = await Image.load(destFile);
         //let image = await Image.fromCanvas(imageData);
         let borderSize = currentPage === 1 ? Math.round((viewPortWidth + coverExtraWidth) / 100 * 3) : Math.round(image.height - image.height / 1.02040);
