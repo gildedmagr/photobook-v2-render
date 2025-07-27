@@ -5,16 +5,8 @@ const app = express();
 const http = require('http').createServer(app);
 const route = require('./src/routes');
 const {socketService} = require('./src/services');
-const {createAdapter} = require('@socket.io/redis-adapter');
-const {createClient} = require('redis');
 
-const io = socketService.createSocketInstance(http);
-const pubClient = createClient({url: 'redis://redis:6379'});
-const subClient = pubClient.duplicate();
-
-pubClient.connect().then(r => subClient.connect().then(() => io.adapter(createAdapter(pubClient, subClient))));
-//subClient.connect();
-//io.adapter(createAdapter(pubClient, subClient));
+socketService.createSocketInstance(http);
 
 const port = process.env.PORT || 3000;
 

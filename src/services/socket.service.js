@@ -1,8 +1,15 @@
 const {Server} = require("socket.io");
+const {createAdapter} = require('@socket.io/redis-adapter');
+const { Redis } = require("ioredis");
+
+
 let socketIO;
 const clients = {};
 const createSocketInstance = (http) => {
-    socketIO = new Server(http, {cors: {origin: "*"}});
+    const pubClient = new Redis();
+    const subClient = pubClient.duplicate();
+
+    socketIO = new Server({ adapter: createAdapter(pubClient, subClient)});
     socketIO.on('connection', (socket) => {
         const uid = socket.handshake.query['uid'];
         console.log('a user connected, uid: ', uid);
