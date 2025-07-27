@@ -12,9 +12,9 @@ const io = socketService.createSocketInstance(http);
 const pubClient = createClient({url: 'redis://redis:6379'});
 const subClient = pubClient.duplicate();
 
-pubClient.connect();
-subClient.connect();
-io.adapter(createAdapter(pubClient, subClient));
+pubClient.connect().then(r => subClient.connect().then(() => io.adapter(createAdapter(pubClient, subClient))));
+//subClient.connect();
+//io.adapter(createAdapter(pubClient, subClient));
 
 const port = process.env.PORT || 3000;
 
