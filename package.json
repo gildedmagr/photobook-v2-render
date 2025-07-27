@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type":"commonjs",
+  "type": "commonjs",
   "dependencies": {
     "@socket.io/redis-adapter": "^8.3.0",
     "body-parser": "^1.20.0",
@@ -20,6 +20,7 @@
     "image-js": "^0.35.1",
     "placeholdify": "^1.0.2",
     "puppeteer": "^16.2.0",
+    "redis": "^5.6.1",
     "socket.io": "^4.5.1"
   }
 }
