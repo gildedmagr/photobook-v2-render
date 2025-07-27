@@ -17,7 +17,14 @@ const createSocketInstance = (http) => {
         console.log(err.message);
     });
 
-    socketIO = new Server({ adapter: createAdapter(pubClient, subClient)});
+    socketIO = new Server(http,
+        {
+            cors: {
+                origin: "*",
+                methods: ["GET", "POST"]
+            },
+            adapter: createAdapter(pubClient, subClient)
+        });
     socketIO.on('connection', (socket) => {
         const uid = socket.handshake.query['uid'];
         console.log('a user connected, uid: ', uid);
