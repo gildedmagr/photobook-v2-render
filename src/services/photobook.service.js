@@ -27,7 +27,7 @@ const puppeteerCacheDir = '/tmp/puppeteer/cache';
 const startRender = async (domain, uid, totalPages, width, height, withBorder) => {
     const start = Date.now();
     const relativePath = `image/photobook/renders/${uid}`;
-    const destinationPath = `${domainsMap[domain]}/${relativePath}`;
+    const destinationPath = path.join(domainsMap[domain], relativePath);
     const links = [];
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
@@ -84,7 +84,7 @@ const startRender = async (domain, uid, totalPages, width, height, withBorder) =
             type: 'jpeg',
             quality: 100
         });
-        console.log('Snapshot has been created');
+        console.log(`Snapshot has been created on path: ${destFile}`);
         links.push(`https://${domain}/${relativePath}/${uid}/${currentPage}.jpg`);
     }
     await page.close();
