@@ -9,6 +9,14 @@ const createSocketInstance = (http) => {
     const pubClient = new Redis();
     const subClient = pubClient.duplicate();
 
+    pubClient.on("error", (err) => {
+        console.log(err.message);
+    });
+
+    subClient.on("error", (err) => {
+        console.log(err.message);
+    });
+
     socketIO = new Server({ adapter: createAdapter(pubClient, subClient)});
     socketIO.on('connection', (socket) => {
         const uid = socket.handshake.query['uid'];
