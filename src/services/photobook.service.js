@@ -2,6 +2,7 @@ const puppeteer = require("puppeteer");
 const placeholdify = require('placeholdify');
 const fs = require('fs');
 const {Image} = require('image-js');
+const path = require('path');
 const socketService = require("./socket.service");
 const {minimal_args} = require("../utils");
 
@@ -26,7 +27,7 @@ const puppeteerCacheDir = '/tmp/puppeteer/cache';
 const startRender = async (domain, uid, totalPages, width, height, withBorder) => {
     const start = Date.now();
     const relativePath = `image/photobook/renders/${uid}`;
-    const destinationPath = `${domainsMap[domain]}/${relativePath}`;
+    const destinationPath = path.join(domainsMap[domain], relativePath);
     const links = [];
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
@@ -83,7 +84,7 @@ const startRender = async (domain, uid, totalPages, width, height, withBorder) =
             type: 'jpeg',
             quality: 100
         });
-        console.log('Snapshot has been created');
+        console.log(`Snapshot has been created on path: ${destFile}`);
         links.push(`https://${domain}/${relativePath}/${uid}/${currentPage}.jpg`);
     }
     await page.close();
@@ -110,7 +111,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
     const browserWidth = parseInt(width);
     const browserHeight = parseInt(height);
     const relativePath = `image/photobook/snapshots/${uid}`;
-    const destinationPath = `${domainsMap[domain]}/${relativePath}`;
+    const destinationPath = path.join(domainsMap[domain], relativePath);
     if (!fs.existsSync(destinationPath)) {
         fs.mkdirSync(destinationPath, {recursive: true});
     }else {
@@ -172,7 +173,7 @@ const create3DPreviewPages = async (domain, uid, totalPages, width, height) => {
             type: 'jpeg',
             quality: 100
         });
-        console.log('Snapshot has been created');
+        console.log(`Snapshot has been created on path: ${destFile}`);
         let image = await Image.load(destFile);
         //let image = await Image.fromCanvas(imageData);
         let borderSize = currentPage === 1 ? Math.round((viewPortWidth + coverExtraWidth) / 100 * 3) : Math.round(image.height - image.height / 1.02040);

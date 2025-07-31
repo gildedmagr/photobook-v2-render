@@ -5,9 +5,8 @@ const app = express();
 const http = require('http').createServer(app);
 const route = require('./src/routes');
 const {socketService} = require('./src/services');
-const path = require("path");
 
-const io = socketService.createSocketInstance(http);
+socketService.createSocketInstance(http);
 
 const port = process.env.PORT || 3000;
 
